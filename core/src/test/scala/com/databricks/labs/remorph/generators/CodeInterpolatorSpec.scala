@@ -5,7 +5,7 @@ import com.databricks.labs.remorph._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
-class TBAInterpolatorSpec extends AnyWordSpec with Matchers with TransformationConstructors[Phase] {
+class CodeInterpolatorSpec extends AnyWordSpec with Matchers with TransformationConstructors {
 
   "SQLInterpolator" should {
 
@@ -77,7 +77,21 @@ class TBAInterpolatorSpec extends AnyWordSpec with Matchers with TransformationC
     "unfortunately, if evaluating one of the arguments throws an exception, " +
       "it cannot be caught by the interpolator because arguments are evaluated eagerly" in {
         def boom(): Unit = throw new RuntimeException("boom")
-        a[RuntimeException] should be thrownBy code"3...2...1...${boom()}"
+        val three = ok("3")
+        val two = ok("2")
+        val one = ok("1")
+        val aftermath = ok("everything exploded")
+        a[RuntimeException] should be thrownBy code"$three...$two...$one...${boom()}...$aftermath"
       }
+
+    "wrap 'normal' exception, such as invalid escapes, in a failure" in {
+      code"\D".runAndDiscardState(Init) shouldBe an[KoResult]
+    }
+
+    "foo" in {
+      val foo = RemorphError
+      println(foo)
+      succeed
+    }
   }
 }
